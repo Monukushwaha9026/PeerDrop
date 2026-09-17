@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: peerdrop
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: STUN_SERVER
+        value: stun:stun.l.google.com:19302
+      # Optional TURN configuration (set in Render Dashboard if relay required)
+      - key: TURN_SERVER
+        sync: false
+      - key: TURN_USERNAME
+        sync: false
+      - key: TURN_PASSWORD
+        sync: false

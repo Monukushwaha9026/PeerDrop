@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PeerDrop &mdash; Direct Peer-to-Peer File Transfer</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Ambient Liquid Glass Background Canvas -->
+  <div class="liquid-canvas" aria-hidden="true">
+    <!-- Atmospheric Ambient Glows -->
+    <div class="atmos-glow glow-upper-left"></div>
+    <div class="atmos-glow glow-right"></div>
+    <div class="atmos-glow glow-lower"></div>
+
+    <!-- Diagonal Luminous Light Streak across curved glass -->
+    <div class="liquid-streak"></div>
+
+    <!-- Fluid Glass Shape 1: Top-Right Organic Glass Wave -->
+    <div class="liquid-shape shape-top-right">
+      <svg viewBox="0 0 700 700" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad-tr" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--liquid-blue-light)" stop-opacity="0.8"/>
+            <stop offset="35%" stop-color="var(--liquid-lavender)" stop-opacity="0.55"/>
+            <stop offset="70%" stop-color="var(--liquid-blue-deep)" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="caustic-tr" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--liquid-specular-white)"/>
+            <stop offset="45%" stop-color="rgba(255, 255, 255, 0.75)"/>
+            <stop offset="80%" stop-color="rgba(200, 230, 255, 0.3)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </linearGradient>
+          <filter id="glass-blur-tr" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="28" result="blur"/>
+          </filter>
+        </defs>
+        <path class="glass-body" d="M 120,0 C 260,110 390,140 440,290 C 490,440 380,540 680,620 L 700,0 Z" fill="url(#grad-tr)" filter="url(#glass-blur-tr)"/>
+        <path class="glass-edge" d="M 120,0 C 260,110 390,140 440,290 C 490,440 380,540 680,620" fill="none" stroke="url(#caustic-tr)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Fluid Glass Shape 2: Bottom-Left Flowing Lavender/Blue Shape -->
+    <div class="liquid-shape shape-bottom-left">
+      <svg viewBox="0 0 700 700" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad-bl" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="transparent" stop-opacity="0"/>
+            <stop offset="28%" stop-color="var(--liquid-lavender)" stop-opacity="0.35"/>
+            <stop offset="65%" stop-color="var(--liquid-blue-light)" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="var(--liquid-blue-deep)" stop-opacity="0.85"/>
+          </linearGradient>
+          <linearGradient id="caustic-bl" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="transparent"/>
+            <stop offset="35%" stop-color="rgba(255, 255, 255, 0.35)"/>
+            <stop offset="70%" stop-color="var(--liquid-specular-white)"/>
+            <stop offset="100%" stop-color="rgba(215, 230, 255, 0.8)"/>
+          </linearGradient>
+          <filter id="glass-blur-bl" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="30" result="blur"/>
+          </filter>
+        </defs>
+        <path class="glass-body" d="M 0,180 C 140,210 290,290 330,410 C 370,530 290,590 400,680 L 0,700 Z" fill="url(#grad-bl)" filter="url(#glass-blur-bl)"/>
+        <path class="glass-edge" d="M 0,180 C 140,210 290,290 330,410 C 370,530 290,590 400,680" fill="none" stroke="url(#caustic-bl)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Fluid Glass Shape 3: Bottom-Right Curved Pale-Blue Form -->
+    <div class="liquid-shape shape-bottom-right">
+      <svg viewBox="0 0 650 650" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad-br" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="transparent" stop-opacity="0"/>
+            <stop offset="38%" stop-color="var(--liquid-sky-soft)" stop-opacity="0.35"/>
+            <stop offset="72%" stop-color="var(--liquid-blue-light)" stop-opacity="0.65"/>
+            <stop offset="100%" stop-color="var(--liquid-lavender)" stop-opacity="0.75"/>
+          </linearGradient>
+          <linearGradient id="caustic-br" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="transparent"/>
+            <stop offset="40%" stop-color="rgba(255, 255, 255, 0.45)"/>
+            <stop offset="78%" stop-color="var(--liquid-specular-white)"/>
+            <stop offset="100%" stop-color="rgba(215, 235, 255, 0.75)"/>
+          </linearGradient>
+          <filter id="glass-blur-br" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="28" result="blur"/>
+          </filter>
+        </defs>
+        <path class="glass-body" d="M 220,650 C 270,510 400,410 500,340 C 570,290 610,250 650,210 L 650,650 Z" fill="url(#grad-br)" filter="url(#glass-blur-br)"/>
+        <path class="glass-edge" d="M 220,650 C 270,510 400,410 500,340 C 570,290 610,250 650,210" fill="none" stroke="url(#caustic-br)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Fluid Glass Shape 4: Left-Side Inflow Wave -->
+    <div class="liquid-shape shape-left">
+      <svg viewBox="0 0 550 700" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad-l" x1="0%" y1="50%" x2="100%" y2="50%">
+            <stop offset="0%" stop-color="var(--liquid-blue-deep)" stop-opacity="0.6"/>
+            <stop offset="50%" stop-color="var(--liquid-blue-light)" stop-opacity="0.38"/>
+            <stop offset="82%" stop-color="var(--liquid-sky-soft)" stop-opacity="0.14"/>
+            <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="caustic-l" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="transparent"/>
+            <stop offset="25%" stop-color="rgba(255, 255, 255, 0.7)"/>
+            <stop offset="65%" stop-color="var(--liquid-specular-white)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </linearGradient>
+          <filter id="glass-blur-l" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="30" result="blur"/>
+          </filter>
+        </defs>
+        <path class="glass-body" d="M 0,90 C 200,130 310,270 280,410 C 240,550 140,590 0,640 Z" fill="url(#grad-l)" filter="url(#glass-blur-l)"/>
+        <path class="glass-edge" d="M 0,90 C 200,130 310,270 280,410 C 240,550 140,590 0,640" fill="none" stroke="url(#caustic-l)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Glowing Specular Glints / Star Flares -->
+    <div class="light-flare flare-1" aria-hidden="true">
+      <div class="flare-core"></div>
+      <div class="flare-h"></div>
+      <div class="flare-v"></div>
+    </div>
+    <div class="light-flare flare-2" aria-hidden="true">
+      <div class="flare-core"></div>
+      <div class="flare-h"></div>
+      <div class="flare-v"></div>
+    </div>
+    <div class="light-flare flare-3" aria-hidden="true">
+      <div class="flare-core"></div>
+      <div class="flare-h"></div>
+      <div class="flare-v"></div>
+    </div>
+    <div class="light-flare flare-4" aria-hidden="true">
+      <div class="flare-core"></div>
+      <div class="flare-h"></div>
+      <div class="flare-v"></div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header / Native-Style Branding -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-wrapper">
+          <img src="/assets/logo.svg" alt="PeerDrop Logo" class="brand-logo" width="34" height="34">
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">PeerDrop</span>
+          <span class="brand-badge">P2P</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <!-- iOS-Style Status Pill -->
+        <div class="header-status">
+          <span class="status-indicator-dot" id="global-status-dot"></span>
+          <span class="status-label" id="global-status-text">Ready</span>
+        </div>
+
+        <!-- Circular Frosted Theme Toggle -->
+        <button id="btn-theme-toggle" class="btn-theme-toggle" aria-label="Toggle dark and light theme" title="Toggle theme" type="button">
+          <!-- Sun icon (Light mode) -->
+          <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon icon (Dark mode) -->
+          <svg class="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Browser Incompatibility Banner (Fallback) -->
+    <div id="unsupported-banner" class="unsupported-card" style="display:none;">
+      <h3>Browser Incompatible</h3>
+      <p>Your browser does not support WebRTC peer-to-peer data channels. Please open PeerDrop in modern Chrome, Safari, Edge, or Firefox.</p>
+    </div>
+
+    <!-- Main Dynamic View Container -->
+    <main class="main-card glass-panel" id="main-card">
+      
+      <!-- SCREEN 1: IDLE / WELCOME -->
+      <section id="view-idle" class="view active">
+        <div class="hero-section stagger-item stagger-1">
+          <div class="hero-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span>Direct WebRTC Transfer</span>
+          </div>
+          <h1 class="hero-title">Share files directly<br>between your devices.</h1>
+          <p class="hero-subtitle">
+            Zero cloud uploads. Zero file size caps. Files transfer straight between browsers through an encrypted peer-to-peer data channel.
+          </p>
+        </div>
+
+        <div class="action-stack stagger-item stagger-2">
+          <button id="btn-create-room" class="btn btn-primary btn-large">
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Create Connection</span>
+          </button>
+          
+          <div class="divider">
+            <span>or join existing</span>
+          </div>
+
+          <button id="btn-show-join" class="btn btn-secondary btn-large">
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            <span>Join Connection</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: WAITING FOR PEER (ROOM CREATED + QR CODE) -->
+      <section id="view-waiting" class="view">
+        <div class="state-header stagger-item stagger-1">
+          <div class="pulse-indicator">
+            <span class="pulse-ring"></span>
+            <span class="pulse-core"></span>
+          </div>
+          <h2 class="view-title">Waiting for device...</h2>
+          <p class="view-subtitle">Scan QR code or enter code on the second device.</p>
+        </div>
+
+        <!-- Connection Code Display (Appears before QR code) -->
+        <div class="code-display-card stagger-item stagger-2">
+          <div class="code-label">Connection Code</div>
+          <div class="code-value" id="display-room-code">------</div>
+          <div class="chip-row">
+            <button id="btn-copy-code" class="btn-chip" title="Copy code to clipboard" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span id="copy-text">Copy Code</span>
+            </button>
+            <button id="btn-copy-link" class="btn-chip" title="Copy link to clipboard" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <span id="copy-link-text">Copy Link</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- QR Code Container -->
+        <div class="qr-card stagger-item stagger-3">
+          <div class="qr-wrapper">
+            <img id="qr-code-image" class="qr-image" src="" alt="Pairing QR Code">
+          </div>
+          <div class="qr-instruction">Scan with phone camera to connect instantly</div>
+        </div>
+
+        <div class="action-footer stagger-item stagger-4">
+          <button id="btn-cancel-waiting" class="btn btn-ghost" type="button">
+            Cancel Connection
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: ENTER CODE (JOIN ROOM) -->
+      <section id="view-join" class="view">
+        <div class="state-header stagger-item stagger-1">
+          <h2 class="view-title">Enter Connection Code</h2>
+          <p class="view-subtitle" id="join-instruction-subtitle">Type the 6-character code shown on the host device.</p>
+        </div>
+
+        <div id="join-qr-banner" class="join-banner" style="display:none;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Pre-filled from QR code. Tap Connect to pair!</span>
+        </div>
+
+        <form id="form-join" class="join-form" onsubmit="return false;">
+          <div class="input-group">
+            <input 
+              type="text" 
+              id="input-room-code" 
+              class="code-input" 
+              placeholder="X7K9-P2" 
+              maxlength="7" 
+              autocomplete="off" 
+              autocorrect="off" 
+              autocapitalize="characters" 
+              spellcheck="false"
+              required
+            >
+          </div>
+
+          <div class="action-stack">
+            <button type="submit" id="btn-connect" class="btn btn-primary btn-large">
+              <span>Connect</span>
+            </button>
+            <button type="button" id="btn-back-join" class="btn btn-ghost">
+              Back
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- SCREEN 4: CONNECTING INTERMEDIATE STATE WITH TIMEOUT SAFEGUARD -->
+      <section id="view-connecting" class="view">
+        <div class="connecting-container stagger-item stagger-1">
+          <div class="loader-spinner"></div>
+          <h2 class="view-title" id="connecting-title">Establishing Connection...</h2>
+          <p class="view-subtitle" id="connecting-subtitle">Exchanging WebRTC SDP offer & ICE candidates</p>
+          <div class="connection-status-pill" id="negotiation-status">Negotiating peer-to-peer link</div>
+          
+          <div id="connecting-timeout-box" class="timeout-help-box" style="display:none;">
+            <p>Taking longer than expected? This may happen if devices are behind strict symmetric corporate/NAT firewalls that require TURN relay.</p>
+            <button id="btn-cancel-connecting" class="btn btn-secondary btn-sm" type="button">
+              Cancel and Try Again
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: CONNECTED (ACTIVE P2P TRANSFERS) -->
+      <section id="view-connected" class="view">
+        <!-- Connected Header with iOS Status Pill and Room Details -->
+        <div class="connected-header stagger-item stagger-1">
+          <div class="connected-badge">
+            <span class="status-indicator-dot connected"></span>
+            <span>Connected</span>
+          </div>
+          <div class="room-pill">
+            <span class="room-label">Room:</span>
+            <strong id="connected-room-code">------</strong>
+          </div>
+        </div>
+
+        <!-- Paired Device Info Card -->
+        <div class="peer-info-banner stagger-item stagger-2">
+          <div class="peer-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <div class="peer-details">
+            <div class="peer-name">Paired Peer Device</div>
+            <div class="peer-transport" id="transport-info">Direct P2P &middot; Encrypted</div>
+          </div>
+        </div>
+
+        <!-- FILE TRANSFER CONTAINER (PRIMARY VISUAL FOCUS) -->
+        <div class="file-card-container stagger-item stagger-3" id="file-card-container">
+          
+          <!-- File Drop / Select Area (Primary Focal Point) -->
+          <div class="file-drop-zone" id="file-drop-zone">
+            <input type="file" id="file-input" class="hidden-file-input" style="display:none;">
+            
+            <img 
+              src="assets/cloud-upload.png" 
+              alt="Direct Peer Transfer" 
+              class="cloud-upload-img" 
+              width="86" 
+              height="86" 
+              draggable="false"
+            >
+            
+            <div class="drop-title">Drag & drop a file here</div>
+            <div class="drop-subtitle">or choose from your device</div>
+            
+            <button id="btn-browse-file" class="btn btn-primary btn-pill btn-browse" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Select File</span>
+            </button>
+            
+            <div class="drop-privacy-hint">Direct to peer &middot; No cloud storage</div>
+          </div>
+
+          <!-- Selected File Preview (Ready to Send) -->
+          <div class="file-selected-card" id="file-selected-card" style="display:none;">
+            <div class="file-item-header">
+              <div class="file-type-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <div class="file-details">
+                <div class="file-name" id="selected-file-name">filename.ext</div>
+                <div class="file-meta" id="selected-file-size">0 MB</div>
+              </div>
+              <button id="btn-remove-selected-file" class="btn-icon-only" title="Remove file" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="file-action-row">
+              <button id="btn-send-file" class="btn btn-primary btn-large" style="width:100%;" type="button">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>Send File Directly</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sender Progress Card (with Speed, ETA & Cancel) -->
+          <div class="transfer-progress-card" id="sender-progress-card" style="display:none;">
+            <div class="transfer-header">
+              <span class="transfer-badge sending">Sending</span>
+              <span class="transfer-percentage" id="sender-percent-text">0%</span>
+            </div>
+            <div class="file-details">
+              <div class="file-name" id="sender-file-name">filename.ext</div>
+              <div class="transfer-stats" id="sender-transfer-stats">0 MB / 0 MB</div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar" id="sender-progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="transfer-meta-row">
+              <div class="transfer-meta-group">
+                <div class="meta-item">
+                  <span class="meta-label">Speed:</span>
+                  <span class="meta-value" id="sender-speed">--</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">ETA:</span>
+                  <span class="meta-value" id="sender-eta">--</span>
+                </div>
+              </div>
+              <button id="btn-cancel-sender" class="btn btn-danger-ghost btn-sm" type="button">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Receiver Progress Card (with Speed, ETA & Cancel) -->
+          <div class="transfer-progress-card" id="receiver-progress-card" style="display:none;">
+            <div class="transfer-header">
+              <span class="transfer-badge receiving">Receiving</span>
+              <span class="transfer-percentage" id="receiver-percent-text">0%</span>
+            </div>
+            <div class="file-details">
+              <div class="file-name" id="receiver-file-name">filename.ext</div>
+              <div class="transfer-stats" id="receiver-transfer-stats">0 MB / 0 MB</div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar" id="receiver-progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="transfer-meta-row">
+              <div class="transfer-meta-group">
+                <div class="meta-item">
+                  <span class="meta-label">Speed:</span>
+                  <span class="meta-value" id="receiver-speed">--</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">ETA:</span>
+                  <span class="meta-value" id="receiver-eta">--</span>
+                </div>
+              </div>
+              <button id="btn-cancel-receiver" class="btn btn-danger-ghost btn-sm" type="button">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Completed File Card (Download Available) -->
+          <div class="file-completed-card" id="file-completed-card" style="display:none;">
+            <div class="completed-icon-wrapper">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div class="completed-title">File Ready to Download</div>
+            <div class="completed-filename" id="completed-file-name">filename.ext</div>
+            <div class="completed-filesize" id="completed-file-size">0 MB</div>
+            <div class="completed-actions">
+              <a id="btn-download-file" class="btn btn-primary btn-large" download style="width:100%;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Download File</span>
+              </a>
+              <button id="btn-receive-another" class="btn btn-ghost" type="button" style="margin-top:8px;">
+                Done
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- P2P CHANNEL CONSOLE (INTEGRATED IOS MESSAGING WIDGET) -->
+        <div class="p2p-test-panel stagger-item stagger-4">
+          <div class="test-panel-header">
+            <div class="test-panel-title-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span class="test-panel-title">P2P Channel</span>
+            </div>
+            <span class="latency-badge" id="datachannel-state-badge">Active</span>
+          </div>
+          
+          <div class="chat-log" id="test-chat-log">
+            <div class="chat-item system">
+              <span>Encrypted peer-to-peer data channel established directly between browsers.</span>
+            </div>
+          </div>
+
+          <div class="test-input-row">
+            <input type="text" id="test-msg-input" class="test-input" placeholder="Type a message...">
+            <button id="btn-send-test" class="btn btn-secondary btn-sm" type="button" title="Send message">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+            <button id="btn-send-hello" class="btn btn-primary btn-sm btn-pill" type="button">Hello</button>
+          </div>
+        </div>
+
+        <div class="action-footer stagger-item stagger-4">
+          <button id="btn-disconnect" class="btn btn-disconnect-action" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+              <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+            <span>Disconnect</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Privacy Notice Footer -->
+    <footer class="app-footer">
+      <p class="privacy-note">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>Files transfer directly between devices via WebRTC. Server never receives or stores your data.</span>
+      </p>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
