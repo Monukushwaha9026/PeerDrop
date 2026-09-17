@@ -3,6 +3,12 @@
 > **Seamless, blazing-fast, peer-to-peer file sharing directly between devices in your browser.**  
 > No file size limits. No intermediate servers. No cloud storage.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-peerdrop--y6w5.onrender.com-0071e3?style=for-the-badge&logo=render&logoColor=white)](https://peerdrop-y6w5.onrender.com)
+[![WebRTC](https://img.shields.io/badge/WebRTC-P2P%20DataChannel-34c759?style=for-the-badge)](https://webrtc.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+🔗 **Live App**: [https://peerdrop-y6w5.onrender.com](https://peerdrop-y6w5.onrender.com)
+
 ---
 
 ## ✨ Features
