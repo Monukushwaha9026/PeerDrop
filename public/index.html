@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PeerDrop &mdash; Direct Peer-to-Peer File Transfer</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preload" as="image" href="/assets/cloud-upload.png">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -374,11 +375,13 @@
             <input type="file" id="file-input" class="hidden-file-input" style="display:none;">
             
             <img 
-              src="assets/cloud-upload.png" 
+              src="/assets/cloud-upload.png" 
               alt="Direct Peer Transfer" 
               class="cloud-upload-img" 
               width="86" 
               height="86" 
+              loading="eager"
+              decoding="async"
               draggable="false"
             >
             

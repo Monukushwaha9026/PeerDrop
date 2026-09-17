@@ -25,8 +25,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve static frontend assets
-app.use(express.static(path.join(projectRoot, 'public')));
+// Serve static frontend assets with caching
+app.use(express.static(path.join(projectRoot, 'public'), {
+  maxAge: '1h'
+}));
+
+// Explicitly ensure assets directory is cached
+app.use('/assets', express.static(path.join(projectRoot, 'public', 'assets'), {
+  maxAge: '1d'
+}));
 
 // ICE Server Configuration Endpoint
 app.get('/api/config', (req, res) => {
@@ -96,8 +103,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Deep link route e.g. /join/X7K9-P2
-app.get('/join/:code', (req, res) => {
+// Deep link route e.g. /join/X7K9-P2 (ignore static asset requests)
+app.get('/join/:code', (req, res, next) => {
+  if (req.params.code && req.params.code.includes('.')) {
+    return next();
+  }
   res.sendFile(path.join(projectRoot, 'public', 'index.html'));
 });
 
