@@ -73,8 +73,27 @@ export class UIManager {
     this.btnDownloadFile = document.getElementById('btn-download-file');
     this.btnReceiveAnother = document.getElementById('btn-receive-another');
 
+    // App Container & Mobile Segmented Tabs
+    this.appContainer = document.querySelector('.app-container');
+    this.tabBtnFiles = document.getElementById('tab-btn-files');
+    this.tabBtnChat = document.getElementById('tab-btn-chat');
+    this.paneFiles = document.getElementById('pane-files');
+    this.paneChat = document.getElementById('pane-chat');
+    this.chatUnreadBadge = document.getElementById('chat-unread-badge');
+    this.activeMobileTab = 'files';
+    this.unreadCount = 0;
+
+    // Chat Interactive Elements
+    this.testMsgInput = document.getElementById('test-msg-input');
+    this.btnSendTest = document.getElementById('btn-send-test');
+    this.btnClearChat = document.getElementById('btn-clear-chat');
+    this.typingIndicator = document.getElementById('typing-indicator');
+    this.btnScrollBottom = document.getElementById('btn-scroll-bottom');
+    this.quickChips = document.querySelectorAll('.quick-chip');
+
     this.checkBrowserSupport();
     this.setupCodeInputAutoFormat();
+    this.setupChatUI();
   }
 
   checkBrowserSupport() {
@@ -163,6 +182,19 @@ export class UIManager {
         }
       }
     });
+    this.setConnectedMode(viewName === 'connected');
+  }
+
+  setConnectedMode(isConnected) {
+    if (this.appContainer) {
+      if (isConnected) {
+        this.appContainer.classList.add('is-connected');
+      } else {
+        this.appContainer.classList.remove('is-connected');
+        this.setMobileTab('files');
+        this.updateUnreadCount(0);
+      }
+    }
   }
 
   setGlobalStatus(state, text) {
@@ -278,17 +310,200 @@ export class UIManager {
     }
   }
 
-  appendChatMessage(message, sender = 'received') {
+  setupChatUI() {
+    // Mobile tab buttons
+    this.tabBtnFiles?.addEventListener('click', () => this.setMobileTab('files'));
+    this.tabBtnChat?.addEventListener('click', () => this.setMobileTab('chat'));
+
+    // Clear chat button
+    this.btnClearChat?.addEventListener('click', () => this.clearChatMessages());
+
+    // Scroll to bottom button
+    this.btnScrollBottom?.addEventListener('click', () => {
+      if (this.testChatLog) {
+        this.testChatLog.scrollTop = this.testChatLog.scrollHeight;
+        this.btnScrollBottom.style.display = 'none';
+      }
+    });
+
+    // Detect user scroll inside testChatLog to show/hide scroll-to-bottom button
+    this.testChatLog?.addEventListener('scroll', () => {
+      const isNearBottom = this.testChatLog.scrollHeight - this.testChatLog.scrollTop - this.testChatLog.clientHeight < 60;
+      if (isNearBottom && this.btnScrollBottom) {
+        this.btnScrollBottom.style.display = 'none';
+      }
+    });
+
+    // Auto-resize textarea
+    this.testMsgInput?.addEventListener('input', () => {
+      this.testMsgInput.style.height = 'auto';
+      this.testMsgInput.style.height = `${Math.min(this.testMsgInput.scrollHeight, 80)}px`;
+    });
+  }
+
+  setMobileTab(tab) {
+    if (tab === 'files') {
+      this.tabBtnFiles?.classList.add('active');
+      this.tabBtnChat?.classList.remove('active');
+      this.paneFiles?.classList.add('active');
+      this.paneChat?.classList.remove('active');
+      this.activeMobileTab = 'files';
+    } else if (tab === 'chat') {
+      this.tabBtnFiles?.classList.remove('active');
+      this.tabBtnChat?.classList.add('active');
+      this.paneFiles?.classList.remove('active');
+      this.paneChat?.classList.add('active');
+      this.activeMobileTab = 'chat';
+      this.updateUnreadCount(0);
+      if (this.testChatLog) {
+        this.testChatLog.scrollTop = this.testChatLog.scrollHeight;
+      }
+    }
+  }
+
+  updateUnreadCount(count) {
+    this.unreadCount = Math.max(0, count);
+    if (!this.chatUnreadBadge) return;
+    if (this.unreadCount > 0) {
+      this.chatUnreadBadge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+      this.chatUnreadBadge.style.display = 'inline-block';
+    } else {
+      this.chatUnreadBadge.style.display = 'none';
+    }
+  }
+
+  incrementUnreadCount() {
+    if (this.activeMobileTab !== 'chat') {
+      this.updateUnreadCount(this.unreadCount + 1);
+    }
+  }
+
+  linkifyText(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    const escaped = div.innerHTML;
+    const urlPattern = /(https?:\/\/[^\s]+)/g;
+    return escaped.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>');
+  }
+
+  renderChatMessage({ id, text, sender = 'received', timestamp, status = 'sent' }) {
     if (!this.testChatLog) return;
-    const item = document.createElement('div');
-    item.className = `chat-item ${sender}`;
+    
+    // Auto-scroll check before appending
+    const isNearBottom = this.testChatLog.scrollHeight - this.testChatLog.scrollTop - this.testChatLog.clientHeight < 70;
 
-    const text = document.createElement('span');
-    text.textContent = message;
-    item.appendChild(text);
+    const group = document.createElement('div');
+    group.className = `chat-bubble-group ${sender}`;
 
-    this.testChatLog.appendChild(item);
-    this.testChatLog.scrollTop = this.testChatLog.scrollHeight;
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${sender}`;
+    if (id) bubble.setAttribute('data-msg-id', id);
+
+    const content = document.createElement('div');
+    content.className = 'bubble-content';
+    content.innerHTML = this.linkifyText(text);
+    bubble.appendChild(content);
+
+    const meta = document.createElement('div');
+    meta.className = 'bubble-meta';
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'bubble-time';
+    timeSpan.textContent = timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    meta.appendChild(timeSpan);
+
+    if (sender === 'sent') {
+      const statusSpan = document.createElement('span');
+      statusSpan.className = 'bubble-status';
+      if (id) statusSpan.id = `status-${id}`;
+      statusSpan.textContent = status === 'delivered' ? '✓✓' : '✓';
+      if (status === 'delivered') statusSpan.style.color = '#34c759';
+      meta.appendChild(statusSpan);
+    }
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'btn-copy-bubble';
+    copyBtn.title = 'Copy message';
+    copyBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    copyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.copyMessageText(text, copyBtn);
+    });
+    meta.appendChild(copyBtn);
+
+    bubble.appendChild(meta);
+    group.appendChild(bubble);
+    this.testChatLog.appendChild(group);
+
+    if (sender === 'received') {
+      this.incrementUnreadCount();
+    }
+
+    if (isNearBottom || sender === 'sent') {
+      this.testChatLog.scrollTop = this.testChatLog.scrollHeight;
+      if (this.btnScrollBottom) this.btnScrollBottom.style.display = 'none';
+    } else if (this.btnScrollBottom) {
+      this.btnScrollBottom.style.display = 'inline-flex';
+    }
+  }
+
+  async copyMessageText(text, btnElement) {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (btnElement) {
+        btnElement.classList.add('copied');
+        btnElement.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        setTimeout(() => {
+          btnElement.classList.remove('copied');
+          btnElement.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+        }, 1500);
+      }
+      this.showToast('Copied to clipboard');
+    } catch (_) {
+      this.showToast('Could not copy message');
+    }
+  }
+
+  updateMessageStatus(id, status) {
+    const el = document.getElementById(`status-${id}`);
+    if (el) {
+      el.textContent = status === 'delivered' ? '✓✓' : '✓';
+      if (status === 'delivered') {
+        el.style.color = '#34c759';
+      }
+    }
+  }
+
+  setTypingIndicator(isTyping) {
+    if (!this.typingIndicator) return;
+    this.typingIndicator.style.display = isTyping ? 'flex' : 'none';
+    if (isTyping && this.testChatLog) {
+      const isNearBottom = this.testChatLog.scrollHeight - this.testChatLog.scrollTop - this.testChatLog.clientHeight < 70;
+      if (isNearBottom) {
+        this.testChatLog.scrollTop = this.testChatLog.scrollHeight;
+      }
+    }
+  }
+
+  clearChatMessages() {
+    if (!this.testChatLog) return;
+    const systemItems = this.testChatLog.querySelectorAll('.chat-system-item');
+    this.testChatLog.innerHTML = '';
+    systemItems.forEach(item => this.testChatLog.appendChild(item));
+    this.showToast('Chat history cleared');
+  }
+
+  appendChatMessage(message, sender = 'received') {
+    const cleanText = message.replace(/^(You|Peer):\s*/, '');
+    const id = `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    this.renderChatMessage({
+      id,
+      text: cleanText,
+      sender,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'sent'
+    });
   }
 
   // ==========================================

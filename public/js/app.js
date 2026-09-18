@@ -201,21 +201,52 @@ class App {
     // Disconnect Button
     document.getElementById('btn-disconnect')?.addEventListener('click', () => this.handleDisconnect());
 
-    // Milestone 1 P2P Test Messaging
+    // Upgraded P2P Chat & Mobile Tab Bindings
     const sendInput = document.getElementById('test-msg-input');
     const sendBtn = document.getElementById('btn-send-test');
-    const helloBtn = document.getElementById('btn-send-hello');
+    let typingDebounceTimer = null;
+    let isCurrentlyTyping = false;
+
+    const stopTyping = () => {
+      if (isCurrentlyTyping) {
+        isCurrentlyTyping = false;
+        this.webrtc.send(JSON.stringify({ type: 'chat-typing', isTyping: false }));
+      }
+    };
 
     const sendTextMessage = (text) => {
       if (!text || !text.trim()) return;
+      const cleanText = text.trim();
+      const id = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Stop typing status before sending
+      if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
+      stopTyping();
+
+      // Render outgoing message immediately with pending status
+      this.ui.renderChatMessage({
+        id,
+        text: cleanText,
+        sender: 'sent',
+        timestamp,
+        status: 'sent'
+      });
+
+      // Transmit over WebRTC DataChannel
       const sent = this.webrtc.send(JSON.stringify({
-        type: 'test-text',
-        payload: { text, timestamp: new Date().toLocaleTimeString() }
+        type: 'chat',
+        id,
+        text: cleanText,
+        timestamp,
+        payload: { text: cleanText, timestamp } // backward compatibility
       }));
 
       if (sent) {
-        this.ui.appendChatMessage(`You: ${text}`, 'sent');
-        if (sendInput) sendInput.value = '';
+        if (sendInput) {
+          sendInput.value = '';
+          sendInput.style.height = 'auto';
+        }
       } else {
         this.ui.showToast('Failed to send: DataChannel is not open.');
       }
@@ -226,13 +257,39 @@ class App {
     });
 
     sendInput?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         sendTextMessage(sendInput.value);
       }
     });
 
-    helloBtn?.addEventListener('click', () => {
-      sendTextMessage('Hello World! 🌐 (Direct P2P)');
+    // Live Typing Detection with 1.5s Debounce
+    sendInput?.addEventListener('input', () => {
+      if (sendInput.value.trim().length > 0) {
+        if (!isCurrentlyTyping) {
+          isCurrentlyTyping = true;
+          this.webrtc.send(JSON.stringify({ type: 'chat-typing', isTyping: true }));
+        }
+        if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
+        typingDebounceTimer = setTimeout(() => {
+          stopTyping();
+        }, 1500);
+      } else {
+        stopTyping();
+      }
+    });
+
+    // Quick Snippet Chips
+    document.querySelectorAll('.quick-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const text = chip.getAttribute('data-text');
+        if (text) sendTextMessage(text);
+      });
+    });
+
+    // Clear Chat Button sync
+    document.getElementById('btn-clear-chat')?.addEventListener('click', () => {
+      this.webrtc.send(JSON.stringify({ type: 'chat-clear' }));
     });
   }
 
@@ -582,8 +639,36 @@ class App {
               this.fileReceiver.handleCancel(msg);
               this.fileSender.handleRemoteCancel();
               break;
+            case 'chat':
+              this.ui.renderChatMessage({
+                id: msg.id,
+                text: msg.text || msg.payload?.text,
+                sender: 'received',
+                timestamp: msg.timestamp
+              });
+              if (msg.id) {
+                this.webrtc.send(JSON.stringify({ type: 'chat-ack', id: msg.id }));
+              }
+              this.ui.setTypingIndicator(false);
+              break;
+            case 'chat-ack':
+              if (msg.id) {
+                this.ui.updateMessageStatus(msg.id, 'delivered');
+              }
+              break;
+            case 'chat-typing':
+              this.ui.setTypingIndicator(Boolean(msg.isTyping));
+              break;
+            case 'chat-clear':
+              this.ui.clearChatMessages();
+              break;
             case 'test-text':
-              this.ui.appendChatMessage(`Peer: ${msg.payload.text}`, 'received');
+              this.ui.renderChatMessage({
+                id: `m_${Date.now()}`,
+                text: msg.payload?.text || msg.text,
+                sender: 'received',
+                timestamp: msg.payload?.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              });
               break;
             default:
               console.log('[App] Unhandled P2P message:', msg);

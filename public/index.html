@@ -352,199 +352,271 @@
           </div>
         </div>
 
-        <!-- Paired Device Info Card -->
-        <div class="peer-info-banner stagger-item stagger-2">
-          <div class="peer-avatar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
+        <!-- Mobile Segmented Control (Tabs for Phone screens <= 768px) -->
+        <div class="mobile-segmented-control stagger-item stagger-1" id="mobile-segmented-control">
+          <button type="button" class="segmented-btn active" id="tab-btn-files">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
-          </div>
-          <div class="peer-details">
-            <div class="peer-name">Paired Peer Device</div>
-            <div class="peer-transport" id="transport-info">Direct P2P &middot; Encrypted</div>
-          </div>
+            <span>Files</span>
+          </button>
+          <button type="button" class="segmented-btn" id="tab-btn-chat">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Chat</span>
+            <span class="chat-unread-badge" id="chat-unread-badge" style="display:none;">0</span>
+          </button>
         </div>
 
-        <!-- FILE TRANSFER CONTAINER (PRIMARY VISUAL FOCUS) -->
-        <div class="file-card-container stagger-item stagger-3" id="file-card-container">
+        <!-- Connected Dual-Pane Split Layout (Desktop Side-by-Side, Mobile Single Tab) -->
+        <div class="connected-split-layout">
           
-          <!-- File Drop / Select Area (Primary Focal Point) -->
-          <div class="file-drop-zone" id="file-drop-zone">
-            <input type="file" id="file-input" class="hidden-file-input" style="display:none;">
-            
-            <img 
-              src="/assets/cloud-upload.png" 
-              alt="Direct Peer Transfer" 
-              class="cloud-upload-img" 
-              width="86" 
-              height="86" 
-              loading="eager"
-              decoding="async"
-              draggable="false"
-            >
-            
-            <div class="drop-title">Drag & drop a file here</div>
-            <div class="drop-subtitle">or choose from your device</div>
-            
-            <button id="btn-browse-file" class="btn btn-primary btn-pill btn-browse" type="button">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-              <span>Select File</span>
-            </button>
-            
-            <div class="drop-privacy-hint">Direct to peer &middot; No cloud storage</div>
-          </div>
-
-          <!-- Selected File Preview (Ready to Send) -->
-          <div class="file-selected-card" id="file-selected-card" style="display:none;">
-            <div class="file-item-header">
-              <div class="file-type-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
+          <!-- LEFT PANE: FILE TRANSFER -->
+          <div class="split-pane pane-files active" id="pane-files">
+            <!-- Paired Device Info Card -->
+            <div class="peer-info-banner stagger-item stagger-2">
+              <div class="peer-avatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
                 </svg>
               </div>
-              <div class="file-details">
-                <div class="file-name" id="selected-file-name">filename.ext</div>
-                <div class="file-meta" id="selected-file-size">0 MB</div>
+              <div class="peer-details">
+                <div class="peer-name">Paired Peer Device</div>
+                <div class="peer-transport" id="transport-info">Direct P2P &middot; Encrypted</div>
               </div>
-              <button id="btn-remove-selected-file" class="btn-icon-only" title="Remove file" type="button">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
             </div>
-            <div class="file-action-row">
-              <button id="btn-send-file" class="btn btn-primary btn-large" style="width:100%;" type="button">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-                <span>Send File Directly</span>
-              </button>
-            </div>
-          </div>
 
-          <!-- Sender Progress Card (with Speed, ETA & Cancel) -->
-          <div class="transfer-progress-card" id="sender-progress-card" style="display:none;">
-            <div class="transfer-header">
-              <span class="transfer-badge sending">Sending</span>
-              <span class="transfer-percentage" id="sender-percent-text">0%</span>
-            </div>
-            <div class="file-details">
-              <div class="file-name" id="sender-file-name">filename.ext</div>
-              <div class="transfer-stats" id="sender-transfer-stats">0 MB / 0 MB</div>
-            </div>
-            <div class="progress-track">
-              <div class="progress-bar" id="sender-progress-bar" style="width: 0%;"></div>
-            </div>
-            <div class="transfer-meta-row">
-              <div class="transfer-meta-group">
-                <div class="meta-item">
-                  <span class="meta-label">Speed:</span>
-                  <span class="meta-value" id="sender-speed">--</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">ETA:</span>
-                  <span class="meta-value" id="sender-eta">--</span>
-                </div>
+            <!-- FILE TRANSFER CONTAINER (PRIMARY VISUAL FOCUS) -->
+            <div class="file-card-container stagger-item stagger-3" id="file-card-container">
+              
+              <!-- File Drop / Select Area (Primary Focal Point) -->
+              <div class="file-drop-zone" id="file-drop-zone">
+                <input type="file" id="file-input" class="hidden-file-input" style="display:none;">
+                
+                <img 
+                  src="/assets/cloud-upload.png" 
+                  alt="Direct Peer Transfer" 
+                  class="cloud-upload-img" 
+                  width="86" 
+                  height="86" 
+                  loading="eager"
+                  decoding="async"
+                  draggable="false"
+                >
+                
+                <div class="drop-title">Drag & drop a file here</div>
+                <div class="drop-subtitle">or choose from your device</div>
+                
+                <button id="btn-browse-file" class="btn btn-primary btn-pill btn-browse" type="button">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span>Select File</span>
+                </button>
+                
+                <div class="drop-privacy-hint">Direct to peer &middot; No cloud storage</div>
               </div>
-              <button id="btn-cancel-sender" class="btn btn-danger-ghost btn-sm" type="button">
-                Cancel
-              </button>
-            </div>
-          </div>
 
-          <!-- Receiver Progress Card (with Speed, ETA & Cancel) -->
-          <div class="transfer-progress-card" id="receiver-progress-card" style="display:none;">
-            <div class="transfer-header">
-              <span class="transfer-badge receiving">Receiving</span>
-              <span class="transfer-percentage" id="receiver-percent-text">0%</span>
-            </div>
-            <div class="file-details">
-              <div class="file-name" id="receiver-file-name">filename.ext</div>
-              <div class="transfer-stats" id="receiver-transfer-stats">0 MB / 0 MB</div>
-            </div>
-            <div class="progress-track">
-              <div class="progress-bar" id="receiver-progress-bar" style="width: 0%;"></div>
-            </div>
-            <div class="transfer-meta-row">
-              <div class="transfer-meta-group">
-                <div class="meta-item">
-                  <span class="meta-label">Speed:</span>
-                  <span class="meta-value" id="receiver-speed">--</span>
+              <!-- Selected File Preview (Ready to Send) -->
+              <div class="file-selected-card" id="file-selected-card" style="display:none;">
+                <div class="file-item-header">
+                  <div class="file-type-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                  </div>
+                  <div class="file-details">
+                    <div class="file-name" id="selected-file-name">filename.ext</div>
+                    <div class="file-meta" id="selected-file-size">0 MB</div>
+                  </div>
+                  <button id="btn-remove-selected-file" class="btn-icon-only" title="Remove file" type="button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
                 </div>
-                <div class="meta-item">
-                  <span class="meta-label">ETA:</span>
-                  <span class="meta-value" id="receiver-eta">--</span>
+                <div class="file-action-row">
+                  <button id="btn-send-file" class="btn btn-primary btn-large" style="width:100%;" type="button">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    <span>Send File Directly</span>
+                  </button>
                 </div>
               </div>
-              <button id="btn-cancel-receiver" class="btn btn-danger-ghost btn-sm" type="button">
-                Cancel
-              </button>
+
+              <!-- Sender Progress Card (with Speed, ETA & Cancel) -->
+              <div class="transfer-progress-card" id="sender-progress-card" style="display:none;">
+                <div class="transfer-header">
+                  <span class="transfer-badge sending">Sending</span>
+                  <span class="transfer-percentage" id="sender-percent-text">0%</span>
+                </div>
+                <div class="file-details">
+                  <div class="file-name" id="sender-file-name">filename.ext</div>
+                  <div class="transfer-stats" id="sender-transfer-stats">0 MB / 0 MB</div>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-bar" id="sender-progress-bar" style="width: 0%;"></div>
+                </div>
+                <div class="transfer-meta-row">
+                  <div class="transfer-meta-group">
+                    <div class="meta-item">
+                      <span class="meta-label">Speed:</span>
+                      <span class="meta-value" id="sender-speed">--</span>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">ETA:</span>
+                      <span class="meta-value" id="sender-eta">--</span>
+                    </div>
+                  </div>
+                  <button id="btn-cancel-sender" class="btn btn-danger-ghost btn-sm" type="button">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              <!-- Receiver Progress Card (with Speed, ETA & Cancel) -->
+              <div class="transfer-progress-card" id="receiver-progress-card" style="display:none;">
+                <div class="transfer-header">
+                  <span class="transfer-badge receiving">Receiving</span>
+                  <span class="transfer-percentage" id="receiver-percent-text">0%</span>
+                </div>
+                <div class="file-details">
+                  <div class="file-name" id="receiver-file-name">filename.ext</div>
+                  <div class="transfer-stats" id="receiver-transfer-stats">0 MB / 0 MB</div>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-bar" id="receiver-progress-bar" style="width: 0%;"></div>
+                </div>
+                <div class="transfer-meta-row">
+                  <div class="transfer-meta-group">
+                    <div class="meta-item">
+                      <span class="meta-label">Speed:</span>
+                      <span class="meta-value" id="receiver-speed">--</span>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">ETA:</span>
+                      <span class="meta-value" id="receiver-eta">--</span>
+                    </div>
+                  </div>
+                  <button id="btn-cancel-receiver" class="btn btn-danger-ghost btn-sm" type="button">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              <!-- Completed File Card (Download Available) -->
+              <div class="file-completed-card" id="file-completed-card" style="display:none;">
+                <div class="completed-icon-wrapper">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="completed-title">File Ready to Download</div>
+                <div class="completed-filename" id="completed-file-name">filename.ext</div>
+                <div class="completed-filesize" id="completed-file-size">0 MB</div>
+                <div class="completed-actions">
+                  <a id="btn-download-file" class="btn btn-primary btn-large" download style="width:100%;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download File</span>
+                  </a>
+                  <button id="btn-receive-another" class="btn btn-ghost" type="button" style="margin-top:8px;">
+                    Done
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <!-- Completed File Card (Download Available) -->
-          <div class="file-completed-card" id="file-completed-card" style="display:none;">
-            <div class="completed-icon-wrapper">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
-            <div class="completed-title">File Ready to Download</div>
-            <div class="completed-filename" id="completed-file-name">filename.ext</div>
-            <div class="completed-filesize" id="completed-file-size">0 MB</div>
-            <div class="completed-actions">
-              <a id="btn-download-file" class="btn btn-primary btn-large" download style="width:100%;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
+          <!-- RIGHT PANE: P2P CHAT UPGRADE -->
+          <div class="split-pane pane-chat" id="pane-chat">
+            <div class="p2p-chat-card stagger-item stagger-3">
+              <div class="chat-card-header">
+                <div class="chat-header-title-wrap">
+                  <span class="chat-status-dot"></span>
+                  <span class="chat-card-title">P2P Secret Chat</span>
+                  <span class="chat-e2e-badge">E2EE</span>
+                </div>
+                <div class="chat-header-actions">
+                  <button id="btn-clear-chat" class="btn-clear-chat" title="Clear chat history" type="button">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span>Clear</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Scrollable Messages Container -->
+              <div class="chat-messages-container" id="test-chat-log">
+                <div class="chat-system-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <span>Encrypted P2P tunnel active. Messages are never saved on any server.</span>
+                </div>
+              </div>
+
+              <!-- Floating Scroll to Bottom Pill -->
+              <button id="btn-scroll-bottom" class="btn-scroll-bottom" type="button" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <polyline points="19 12 12 19 5 12"></polyline>
                 </svg>
-                <span>Download File</span>
-              </a>
-              <button id="btn-receive-another" class="btn btn-ghost" type="button" style="margin-top:8px;">
-                Done
+                <span>New message</span>
               </button>
-            </div>
-          </div>
 
-        </div>
+              <!-- Live Typing Indicator -->
+              <div class="typing-indicator" id="typing-indicator" style="display:none;">
+                <div class="typing-bubble">
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+                <span class="typing-text">Peer is typing...</span>
+              </div>
 
-        <!-- P2P CHANNEL CONSOLE (INTEGRATED IOS MESSAGING WIDGET) -->
-        <div class="p2p-test-panel stagger-item stagger-4">
-          <div class="test-panel-header">
-            <div class="test-panel-title-wrap">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span class="test-panel-title">P2P Channel</span>
-            </div>
-            <span class="latency-badge" id="datachannel-state-badge">Active</span>
-          </div>
-          
-          <div class="chat-log" id="test-chat-log">
-            <div class="chat-item system">
-              <span>Encrypted peer-to-peer data channel established directly between browsers.</span>
-            </div>
-          </div>
+              <!-- Quick Response Chips -->
+              <div class="chat-quick-chips" id="chat-quick-chips">
+                <button id="btn-send-hello" type="button" class="quick-chip" data-text="Hello World! 🌐 (Direct P2P)">Hello 👋</button>
+                <button type="button" class="quick-chip" data-text="Got it! 👍">Got it! 👍</button>
+                <button type="button" class="quick-chip" data-text="Sent! 🚀">Sent! 🚀</button>
+                <button type="button" class="quick-chip" data-text="Wait a sec ⏳">Wait ⏳</button>
+                <button type="button" class="quick-chip" data-text="Thanks! 🙌">Thanks! 🙌</button>
+              </div>
 
-          <div class="test-input-row">
-            <input type="text" id="test-msg-input" class="test-input" placeholder="Type a message...">
-            <button id="btn-send-test" class="btn btn-secondary btn-sm" type="button" title="Send message">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-            </button>
-            <button id="btn-send-hello" class="btn btn-primary btn-sm btn-pill" type="button">Hello</button>
+              <!-- Input Area -->
+              <div class="chat-input-row">
+                <textarea 
+                  id="test-msg-input" 
+                  class="chat-textarea" 
+                  placeholder="Type a message... (Enter to send)" 
+                  rows="1"
+                  maxlength="2000"
+                ></textarea>
+                <button id="btn-send-test" class="btn btn-primary btn-send-bubble" type="button" title="Send message">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
