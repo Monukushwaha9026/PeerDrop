@@ -85,3 +85,61 @@ export class SpeedTracker {
     };
   }
 }
+
+// Pre-computed CRC-32 lookup table (polynomial 0xEDB88320)
+const CRC32_TABLE = new Uint32Array(256);
+for (let i = 0; i < 256; i++) {
+  let c = i;
+  for (let k = 0; k < 8; k++) {
+    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+  }
+  CRC32_TABLE[i] = c;
+}
+
+/**
+ * Fast streaming CRC-32 calculator: updates running CRC on each chunk without memory copies.
+ * @param {number} prevCrc Initial or previous CRC-32 value (start with 0)
+ * @param {Uint8Array} uint8Array Chunk data
+ * @returns {number} Updated unsigned 32-bit CRC
+ */
+export function crc32Update(prevCrc, uint8Array) {
+  let crc = prevCrc ^ (-1);
+  for (let i = 0, len = uint8Array.length; i < len; i++) {
+    crc = (crc >>> 8) ^ CRC32_TABLE[(crc ^ uint8Array[i]) & 0xFF];
+  }
+  return (crc ^ (-1)) >>> 0;
+}
+
+/**
+ * Format 32-bit integer as hex string (e.g. "A3F89B21")
+ */
+export function formatChecksum(num) {
+  if (typeof num === 'string') return num.toUpperCase();
+  return (num >>> 0).toString(16).toUpperCase().padStart(8, '0');
+}
+
+/**
+ * Compute cryptographic SHA-256 hash using Web Crypto API
+ */
+export async function computeSha256(arrayBuffer) {
+  if (typeof crypto !== 'undefined' && crypto.subtle && arrayBuffer) {
+    try {
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Format chunk size tier for UI indicators
+ */
+export function formatChunkTier(chunkSize) {
+  if (chunkSize >= 256 * 1024) return '256 KB Ultra';
+  if (chunkSize >= 128 * 1024) return '128 KB Turbo';
+  return '64 KB Base';
+}
+

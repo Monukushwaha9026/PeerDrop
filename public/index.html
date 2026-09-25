@@ -389,6 +389,18 @@
               </div>
             </div>
 
+            <!-- Direct-to-Disk Streaming Toggle Banner (Chromium File System Access) -->
+            <div class="direct-stream-banner stagger-item stagger-2" id="direct-stream-banner">
+              <label class="stream-toggle-label" title="Stream large files directly to disk without using browser RAM (supports 5GB-10GB+ files)">
+                <input type="checkbox" id="toggle-direct-stream" class="stream-checkbox">
+                <span class="stream-switch"></span>
+                <span class="stream-label-text">
+                  <span class="stream-title">⚡ Direct Disk Stream</span>
+                  <span class="stream-subtext">Zero-RAM streaming for large files</span>
+                </span>
+              </label>
+            </div>
+
             <!-- FILE TRANSFER CONTAINER (PRIMARY VISUAL FOCUS) -->
             <div class="file-card-container stagger-item stagger-3" id="file-card-container">
               
@@ -453,10 +465,13 @@
                 </div>
               </div>
 
-              <!-- Sender Progress Card (with Speed, ETA & Cancel) -->
+              <!-- Sender Progress Card (with Speed, ETA, Turbo Tier, Pause & Cancel) -->
               <div class="transfer-progress-card" id="sender-progress-card" style="display:none;">
                 <div class="transfer-header">
-                  <span class="transfer-badge sending">Sending</span>
+                  <div class="transfer-badge-group">
+                    <span class="transfer-badge sending" id="sender-badge">Sending</span>
+                    <span class="transfer-tier-badge" id="sender-tier-badge">64 KB Base</span>
+                  </div>
                   <span class="transfer-percentage" id="sender-percent-text">0%</span>
                 </div>
                 <div class="file-details">
@@ -477,16 +492,24 @@
                       <span class="meta-value" id="sender-eta">--</span>
                     </div>
                   </div>
-                  <button id="btn-cancel-sender" class="btn btn-danger-ghost btn-sm" type="button">
-                    Cancel
-                  </button>
+                  <div class="transfer-action-buttons">
+                    <button id="btn-pause-sender" class="btn btn-secondary-ghost btn-sm" type="button">
+                      Pause
+                    </button>
+                    <button id="btn-cancel-sender" class="btn btn-danger-ghost btn-sm" type="button">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Receiver Progress Card (with Speed, ETA & Cancel) -->
+              <!-- Receiver Progress Card (with Speed, ETA, Stream Mode, Pause & Cancel) -->
               <div class="transfer-progress-card" id="receiver-progress-card" style="display:none;">
                 <div class="transfer-header">
-                  <span class="transfer-badge receiving">Receiving</span>
+                  <div class="transfer-badge-group">
+                    <span class="transfer-badge receiving" id="receiver-badge">Receiving</span>
+                    <span class="transfer-tier-badge stream-mode" id="receiver-stream-badge" style="display:none;">⚡ Disk Stream</span>
+                  </div>
                   <span class="transfer-percentage" id="receiver-percent-text">0%</span>
                 </div>
                 <div class="file-details">
@@ -507,13 +530,18 @@
                       <span class="meta-value" id="receiver-eta">--</span>
                     </div>
                   </div>
-                  <button id="btn-cancel-receiver" class="btn btn-danger-ghost btn-sm" type="button">
-                    Cancel
-                  </button>
+                  <div class="transfer-action-buttons">
+                    <button id="btn-pause-receiver" class="btn btn-secondary-ghost btn-sm" type="button">
+                      Pause
+                    </button>
+                    <button id="btn-cancel-receiver" class="btn btn-danger-ghost btn-sm" type="button">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Completed File Card (Download Available) -->
+              <!-- Completed File Card (Download Available & Integrity Verified) -->
               <div class="file-completed-card" id="file-completed-card" style="display:none;">
                 <div class="completed-icon-wrapper">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -523,6 +551,17 @@
                 <div class="completed-title">File Ready to Download</div>
                 <div class="completed-filename" id="completed-file-name">filename.ext</div>
                 <div class="completed-filesize" id="completed-file-size">0 MB</div>
+
+                <!-- Cryptographic Integrity Verified Badge -->
+                <div class="integrity-verified-badge" id="integrity-badge">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <polyline points="9 12 11 14 15 10"></polyline>
+                  </svg>
+                  <span id="integrity-text">Verified Bit-for-Bit</span>
+                  <span class="integrity-hash" id="integrity-hash">CRC32: --</span>
+                </div>
+
                 <div class="completed-actions">
                   <a id="btn-download-file" class="btn btn-primary btn-large" download style="width:100%;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

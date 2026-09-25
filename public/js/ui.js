@@ -54,7 +54,10 @@ export class UIManager {
     this.senderProgressBar = document.getElementById('sender-progress-bar');
     this.senderSpeed = document.getElementById('sender-speed');
     this.senderEta = document.getElementById('sender-eta');
+    this.senderBadge = document.getElementById('sender-badge');
+    this.senderTierBadge = document.getElementById('sender-tier-badge');
     this.btnCancelSender = document.getElementById('btn-cancel-sender');
+    this.btnPauseSender = document.getElementById('btn-pause-sender');
 
     // Receiver Progress & Metrics
     this.receiverProgressCard = document.getElementById('receiver-progress-card');
@@ -64,14 +67,33 @@ export class UIManager {
     this.receiverProgressBar = document.getElementById('receiver-progress-bar');
     this.receiverSpeed = document.getElementById('receiver-speed');
     this.receiverEta = document.getElementById('receiver-eta');
+    this.receiverBadge = document.getElementById('receiver-badge');
+    this.receiverStreamBadge = document.getElementById('receiver-stream-badge');
     this.btnCancelReceiver = document.getElementById('btn-cancel-receiver');
+    this.btnPauseReceiver = document.getElementById('btn-pause-receiver');
 
-    // Completed Card
+    // Completed Card & Integrity
     this.fileCompletedCard = document.getElementById('file-completed-card');
     this.completedFileName = document.getElementById('completed-file-name');
     this.completedFileSize = document.getElementById('completed-file-size');
     this.btnDownloadFile = document.getElementById('btn-download-file');
     this.btnReceiveAnother = document.getElementById('btn-receive-another');
+    this.integrityBadge = document.getElementById('integrity-badge');
+    this.integrityText = document.getElementById('integrity-text');
+    this.integrityHash = document.getElementById('integrity-hash');
+
+    // Direct Disk Streaming Controls
+    this.directStreamBanner = document.getElementById('direct-stream-banner');
+    this.toggleDirectStream = document.getElementById('toggle-direct-stream');
+    this.supportsDirectStream = typeof window !== 'undefined' && 'showSaveFilePicker' in window;
+    if (this.toggleDirectStream) {
+      this.toggleDirectStream.checked = this.supportsDirectStream;
+    }
+    if (!this.supportsDirectStream && this.directStreamBanner) {
+      this.directStreamBanner.style.opacity = '0.6';
+      const sub = this.directStreamBanner.querySelector('.stream-subtext');
+      if (sub) sub.textContent = 'Browser memory fallback mode';
+    }
 
     // App Container & Mobile Segmented Tabs
     this.appContainer = document.querySelector('.app-container');
@@ -548,6 +570,12 @@ export class UIManager {
       this.senderTransferStats.textContent = `0 B / ${formatBytes(bytes)}`;
       if (this.senderSpeed) this.senderSpeed.textContent = '--';
       if (this.senderEta) this.senderEta.textContent = '--';
+      if (this.senderBadge) this.senderBadge.textContent = 'Sending';
+      if (this.senderTierBadge) this.senderTierBadge.textContent = '64 KB Base';
+      if (this.btnPauseSender) {
+        this.btnPauseSender.textContent = 'Pause';
+        this.btnPauseSender.classList.remove('paused');
+      }
       this.senderProgressCard.style.display = 'block';
       this.senderProgressCard.classList.remove('card-emerge');
       void this.senderProgressCard.offsetWidth;
@@ -555,16 +583,29 @@ export class UIManager {
     }
   }
 
-  updateSenderProgress(bytesSent, totalBytes, percent, speedFormatted, etaFormatted) {
+  updateSenderProgress(bytesSent, totalBytes, percent, speedFormatted, etaFormatted, chunkTier = null, isPaused = false) {
     if (!this.senderProgressCard) return;
     this.senderPercentText.textContent = `${percent}%`;
     this.senderProgressBar.style.width = `${percent}%`;
     this.senderTransferStats.textContent = `${formatBytes(bytesSent)} / ${formatBytes(totalBytes)}`;
     if (this.senderSpeed && speedFormatted) this.senderSpeed.textContent = speedFormatted;
     if (this.senderEta && etaFormatted) this.senderEta.textContent = etaFormatted;
+    if (chunkTier && this.senderTierBadge) this.senderTierBadge.textContent = chunkTier;
+
+    if (this.btnPauseSender && this.senderBadge) {
+      if (isPaused) {
+        this.senderBadge.textContent = 'Paused';
+        this.btnPauseSender.textContent = 'Resume';
+        this.btnPauseSender.classList.add('paused');
+      } else {
+        this.senderBadge.textContent = 'Sending';
+        this.btnPauseSender.textContent = 'Pause';
+        this.btnPauseSender.classList.remove('paused');
+      }
+    }
   }
 
-  showReceiverProgress(fileNameOrObj, totalBytes) {
+  showReceiverProgress(fileNameOrObj, totalBytes, isDirectStream = false) {
     const name = typeof fileNameOrObj === 'object' && fileNameOrObj !== null 
       ? (fileNameOrObj.name || 'File') 
       : (fileNameOrObj || 'File');
@@ -580,6 +621,14 @@ export class UIManager {
       this.receiverTransferStats.textContent = `0 B / ${formatBytes(bytes)}`;
       if (this.receiverSpeed) this.receiverSpeed.textContent = '--';
       if (this.receiverEta) this.receiverEta.textContent = '--';
+      if (this.receiverBadge) this.receiverBadge.textContent = 'Receiving';
+      if (this.receiverStreamBadge) {
+        this.receiverStreamBadge.style.display = isDirectStream ? 'inline-block' : 'none';
+      }
+      if (this.btnPauseReceiver) {
+        this.btnPauseReceiver.textContent = 'Pause';
+        this.btnPauseReceiver.classList.remove('paused');
+      }
       this.receiverProgressCard.style.display = 'block';
       this.receiverProgressCard.classList.remove('card-emerge');
       void this.receiverProgressCard.offsetWidth;
@@ -587,13 +636,28 @@ export class UIManager {
     }
   }
 
-  updateReceiverProgress(bytesReceived, totalBytes, percent, speedFormatted, etaFormatted) {
+  updateReceiverProgress(bytesReceived, totalBytes, percent, speedFormatted, etaFormatted, isDirectStream = false, isPaused = false) {
     if (!this.receiverProgressCard) return;
     this.receiverPercentText.textContent = `${percent}%`;
     this.receiverProgressBar.style.width = `${percent}%`;
     this.receiverTransferStats.textContent = `${formatBytes(bytesReceived)} / ${formatBytes(totalBytes)}`;
     if (this.receiverSpeed && speedFormatted) this.receiverSpeed.textContent = speedFormatted;
     if (this.receiverEta && etaFormatted) this.receiverEta.textContent = etaFormatted;
+    if (this.receiverStreamBadge && isDirectStream) {
+      this.receiverStreamBadge.style.display = 'inline-block';
+    }
+
+    if (this.btnPauseReceiver && this.receiverBadge) {
+      if (isPaused) {
+        this.receiverBadge.textContent = 'Paused';
+        this.btnPauseReceiver.textContent = 'Resume';
+        this.btnPauseReceiver.classList.add('paused');
+      } else {
+        this.receiverBadge.textContent = 'Receiving';
+        this.btnPauseReceiver.textContent = 'Pause';
+        this.btnPauseReceiver.classList.remove('paused');
+      }
+    }
   }
 
   showFileCompleted(fileInfo) {
@@ -602,9 +666,37 @@ export class UIManager {
       this.completedFileName.textContent = truncateFilename(fileInfo.name, 30);
       this.completedFileName.title = fileInfo.name;
       this.completedFileSize.textContent = formatBytes(fileInfo.size);
-      
-      this.btnDownloadFile.href = fileInfo.downloadUrl;
-      this.btnDownloadFile.download = fileInfo.name;
+
+      // Cryptographic Integrity Badge
+      if (this.integrityBadge) {
+        this.integrityBadge.style.display = 'inline-flex';
+        const hashStr = fileInfo.crc32 ? `CRC32: ${fileInfo.crc32}` : '';
+        if (this.integrityHash) this.integrityHash.textContent = hashStr;
+        if (this.integrityText) {
+          if (fileInfo.checksumVerified !== false) {
+            this.integrityText.textContent = 'Verified Bit-for-Bit';
+            this.integrityBadge.style.color = 'var(--status-green)';
+            this.integrityBadge.style.borderColor = 'rgba(52, 199, 89, 0.28)';
+          } else {
+            this.integrityText.textContent = 'Integrity Mismatch!';
+            this.integrityBadge.style.color = '#ff3b30';
+            this.integrityBadge.style.borderColor = 'rgba(255, 59, 48, 0.35)';
+          }
+        }
+      }
+
+      if (fileInfo.isDirectStream) {
+        // Direct-to-Disk mode: file already saved to disk
+        const titleEl = this.fileCompletedCard.querySelector('.completed-title');
+        if (titleEl) titleEl.textContent = 'Saved Directly to Disk ✓';
+        this.btnDownloadFile.style.display = 'none';
+      } else {
+        const titleEl = this.fileCompletedCard.querySelector('.completed-title');
+        if (titleEl) titleEl.textContent = 'File Ready to Download';
+        this.btnDownloadFile.style.display = 'inline-flex';
+        this.btnDownloadFile.href = fileInfo.downloadUrl;
+        this.btnDownloadFile.download = fileInfo.name;
+      }
 
       this.fileCompletedCard.style.display = 'block';
       this.fileCompletedCard.classList.remove('card-emerge');

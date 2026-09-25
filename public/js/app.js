@@ -383,12 +383,39 @@ class App {
       this.ui.showFileDropZone();
     });
 
+    // Pause/Resume Sender button
+    this.ui.btnPauseSender?.addEventListener('click', () => {
+      if (this.fileSender.isPaused) {
+        this.fileSender.resume();
+      } else {
+        this.fileSender.pause();
+      }
+    });
+
     // Cancel Receiver button
     cancelReceiverBtn?.addEventListener('click', () => {
       this.fileReceiver.cancel();
       this.webrtc.send(JSON.stringify({ type: 'file-cancel' }));
       this.ui.showToast('File transfer cancelled');
       this.ui.showFileDropZone();
+    });
+
+    // Pause/Resume Receiver button
+    this.ui.btnPauseReceiver?.addEventListener('click', () => {
+      if (this.fileReceiver.isPaused) {
+        this.fileReceiver.resume(this.webrtc.dataChannel);
+      } else {
+        this.fileReceiver.pause(this.webrtc.dataChannel);
+      }
+    });
+
+    // Direct Stream toggle notification
+    this.ui.toggleDirectStream?.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        this.ui.showToast('⚡ Direct Disk Stream enabled (0 RAM)');
+      } else {
+        this.ui.showToast('Browser memory download mode active');
+      }
     });
 
     // Transfer completed "Send / Receive Another"
@@ -403,12 +430,36 @@ class App {
       this.ui.showSenderProgress(metadata);
     });
 
-    this.fileSender.on('progress', ({ bytesSent, totalBytes, percent, speedFormatted, etaFormatted }) => {
-      this.ui.updateSenderProgress(bytesSent, totalBytes, percent, speedFormatted, etaFormatted);
+    this.fileSender.on('progress', ({ bytesSent, totalBytes, percent, speedFormatted, etaFormatted, chunkTier, isPaused }) => {
+      this.ui.updateSenderProgress(bytesSent, totalBytes, percent, speedFormatted, etaFormatted, chunkTier, isPaused);
     });
 
-    this.fileSender.on('complete', ({ file }) => {
-      this.ui.showToast(`Sent "${file.name}" successfully!`);
+    this.fileSender.on('pause', () => {
+      this.ui.updateSenderProgress(
+        this.fileSender.currentTransfer?.offset || 0,
+        this.fileSender.currentTransfer?.file?.size || 0,
+        Math.round(((this.fileSender.currentTransfer?.offset || 0) / (this.fileSender.currentTransfer?.file?.size || 1)) * 100),
+        '-- MB/s',
+        'Paused',
+        null,
+        true
+      );
+    });
+
+    this.fileSender.on('resume', () => {
+      this.ui.updateSenderProgress(
+        this.fileSender.currentTransfer?.offset || 0,
+        this.fileSender.currentTransfer?.file?.size || 0,
+        Math.round(((this.fileSender.currentTransfer?.offset || 0) / (this.fileSender.currentTransfer?.file?.size || 1)) * 100),
+        '-- MB/s',
+        'Resuming...',
+        null,
+        false
+      );
+    });
+
+    this.fileSender.on('complete', ({ file, crc32 }) => {
+      this.ui.showToast(`Sent "${file.name}" (CRC32: ${crc32})`);
       this.stagedFile = null;
       if (fileInput) fileInput.value = '';
       this.ui.showFileDropZone();
@@ -423,15 +474,42 @@ class App {
 
     // FileReceiver Event Listeners
     this.fileReceiver.on('start', (fileInfo) => {
-      this.ui.showReceiverProgress(fileInfo);
+      this.ui.showReceiverProgress(fileInfo, fileInfo.size, fileInfo.isDirectStream);
     });
 
-    this.fileReceiver.on('progress', ({ bytesReceived, totalBytes, percent, speedFormatted, etaFormatted }) => {
-      this.ui.updateReceiverProgress(bytesReceived, totalBytes, percent, speedFormatted, etaFormatted);
+    this.fileReceiver.on('progress', ({ bytesReceived, totalBytes, percent, speedFormatted, etaFormatted, isDirectStream, isPaused }) => {
+      this.ui.updateReceiverProgress(bytesReceived, totalBytes, percent, speedFormatted, etaFormatted, isDirectStream, isPaused);
+    });
+
+    this.fileReceiver.on('pause', () => {
+      this.ui.updateReceiverProgress(
+        this.fileReceiver.currentFile?.receivedBytes || 0,
+        this.fileReceiver.currentFile?.size || 0,
+        Math.round(((this.fileReceiver.currentFile?.receivedBytes || 0) / (this.fileReceiver.currentFile?.size || 1)) * 100),
+        '-- MB/s',
+        'Paused',
+        this.fileReceiver.currentFile?.isDirectStream,
+        true
+      );
+    });
+
+    this.fileReceiver.on('resume', () => {
+      this.ui.updateReceiverProgress(
+        this.fileReceiver.currentFile?.receivedBytes || 0,
+        this.fileReceiver.currentFile?.size || 0,
+        Math.round(((this.fileReceiver.currentFile?.receivedBytes || 0) / (this.fileReceiver.currentFile?.size || 1)) * 100),
+        '-- MB/s',
+        'Resuming...',
+        this.fileReceiver.currentFile?.isDirectStream,
+        false
+      );
     });
 
     this.fileReceiver.on('complete', (fileInfo) => {
-      this.ui.showToast(`Received "${fileInfo.name}". Ready to download.`);
+      const msg = fileInfo.isDirectStream 
+        ? `Saved "${fileInfo.name}" directly to disk!` 
+        : `Received "${fileInfo.name}". Ready to download.`;
+      this.ui.showToast(msg);
       this.ui.showFileCompleted(fileInfo);
     });
 
@@ -638,6 +716,20 @@ class App {
             case 'file-cancel':
               this.fileReceiver.handleCancel(msg);
               this.fileSender.handleRemoteCancel();
+              break;
+            case 'file-pause':
+              this.fileReceiver.handlePause();
+              this.fileSender.handleRemotePause();
+              break;
+            case 'file-resume':
+              this.fileReceiver.handleResume();
+              this.fileSender.handleRemoteResume();
+              break;
+            case 'file-resume-request':
+              if (this.fileSender.currentTransfer && this.fileSender.currentTransfer.id === msg.id) {
+                this.fileSender.seekTo(msg.receivedBytes);
+                this.webrtc.send(JSON.stringify({ type: 'file-resume-ack', id: msg.id }));
+              }
               break;
             case 'chat':
               this.ui.renderChatMessage({

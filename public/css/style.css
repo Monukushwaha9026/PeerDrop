@@ -1637,7 +1637,157 @@ body::before {
 .completed-filesize {
   font-size: 0.76rem;
   color: var(--text-tertiary);
-  margin-bottom: 14px;
+  margin-bottom: 8px;
+}
+
+/* Transfer Badge Group & Adaptive Turbo Tiers */
+.transfer-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.transfer-tier-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--accent-blue);
+  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
+  border: 1px solid rgba(0, 113, 227, 0.2);
+}
+
+.transfer-tier-badge.stream-mode {
+  background: rgba(52, 199, 89, 0.12);
+  color: var(--status-green);
+  border-color: rgba(52, 199, 89, 0.25);
+}
+
+.transfer-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-secondary-ghost {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.76rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-secondary-ghost:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+.btn-secondary-ghost.paused {
+  background: rgba(255, 149, 0, 0.16);
+  color: #ff9500;
+  border-color: rgba(255, 149, 0, 0.35);
+}
+
+/* Integrity Verified Badge */
+.integrity-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(52, 199, 89, 0.12);
+  border: 1px solid rgba(52, 199, 89, 0.28);
+  border-radius: 9999px;
+  padding: 5px 14px;
+  color: var(--status-green);
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin: 6px auto 14px auto;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.12);
+}
+
+.integrity-hash {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+/* Direct Stream Banner */
+.direct-stream-banner {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: var(--transition-smooth);
+}
+
+.stream-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.stream-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stream-switch {
+  width: 34px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 9999px;
+  position: relative;
+  transition: background 0.22s var(--ease-ios);
+  flex-shrink: 0;
+}
+
+.stream-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.22s var(--ease-ios);
+}
+
+.stream-checkbox:checked + .stream-switch {
+  background: var(--status-green);
+}
+
+.stream-checkbox:checked + .stream-switch::after {
+  transform: translateX(14px);
+}
+
+.stream-label-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.stream-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stream-subtext {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
 }
 
 /* ==========================================================================
@@ -2357,6 +2507,38 @@ body::before {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
   color: var(--text-secondary);
+}
+
+[data-theme="dark"] .direct-stream-banner {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .stream-switch {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .btn-secondary-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .btn-secondary-ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+[data-theme="dark"] .integrity-verified-badge {
+  background: rgba(48, 209, 88, 0.16);
+  border-color: rgba(48, 209, 88, 0.35);
+  color: #30d158;
+}
+
+[data-theme="dark"] .transfer-tier-badge {
+  background: rgba(10, 132, 255, 0.16);
+  border-color: rgba(10, 132, 255, 0.32);
+  color: #0a84ff;
 }
 
 /* ==========================================================================
