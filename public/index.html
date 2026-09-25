@@ -6,7 +6,7 @@
   <title>PeerDrop &mdash; Direct Peer-to-Peer File Transfer</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preload" as="image" href="/assets/cloud-upload.png">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=2.4">
 </head>
 <body>
   <!-- Ambient Liquid Glass Background Canvas -->
@@ -392,7 +392,7 @@
             <!-- Direct-to-Disk Streaming Toggle Banner (Chromium File System Access) -->
             <div class="direct-stream-banner stagger-item stagger-2" id="direct-stream-banner">
               <label class="stream-toggle-label" title="Stream large files directly to disk without using browser RAM (supports 5GB-10GB+ files)">
-                <input type="checkbox" id="toggle-direct-stream" class="stream-checkbox">
+                <input type="checkbox" id="toggle-direct-stream" class="stream-checkbox" style="display:none;">
                 <span class="stream-switch"></span>
                 <span class="stream-label-text">
                   <span class="stream-title">⚡ Direct Disk Stream</span>
@@ -688,6 +688,6 @@
   </div>
 
   <!-- Scripts -->
-  <script type="module" src="/js/app.js"></script>
+  <script type="module" src="/js/app.js?v=2.4"></script>
 </body>
 </html>

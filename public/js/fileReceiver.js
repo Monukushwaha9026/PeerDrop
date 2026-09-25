@@ -1,4 +1,4 @@
-// public/js/fileReceiver.js - File Chunk Reassembly, Direct-to-Disk Streaming, Checksums & Pause/Resume
+// public/js/fileReceiver.js - File Chunk Reassembly, Fast Direct-to-Disk Streaming, Checksums & Pause/Resume
 import { SpeedTracker, crc32Update, formatChecksum, computeSha256 } from './utils.js';
 
 export class FileReceiver {
@@ -8,6 +8,7 @@ export class FileReceiver {
     this.listeners = new Map();
     this.directStreamWritable = null;
     this.isPaused = false;
+    this.lastProgressEmit = 0;
   }
 
   on(event, callback) {
@@ -45,6 +46,7 @@ export class FileReceiver {
     this.reset();
     this.speedTracker.reset();
     this.isPaused = false;
+    this.lastProgressEmit = 0;
 
     this.currentFile = {
       id: metadata.id,
@@ -55,6 +57,7 @@ export class FileReceiver {
       chunks: [],
       runningCrc: 0,
       writableStream: this.directStreamWritable,
+      streamWritePromise: Promise.resolve(),
       isDirectStream: Boolean(this.directStreamWritable),
       startTime: Date.now()
     };
@@ -62,7 +65,7 @@ export class FileReceiver {
     this.emit('start', this.currentFile);
   }
 
-  async handleChunk(arrayBuffer) {
+  handleChunk(arrayBuffer) {
     if (!this.currentFile) {
       console.warn('[FileReceiver] Received chunk without active metadata');
       return;
@@ -73,34 +76,38 @@ export class FileReceiver {
     this.currentFile.receivedBytes += arrayBuffer.byteLength;
 
     if (this.currentFile.isDirectStream && this.currentFile.writableStream) {
-      // Direct-to-Disk: Pipe directly to disk, free RAM immediately
-      try {
-        await this.currentFile.writableStream.write(arrayBuffer);
-      } catch (err) {
-        console.error('[FileReceiver] Error writing direct stream chunk:', err);
-      }
+      // Pipelined async write: non-blocking to maximize network packet ingestion
+      this.currentFile.streamWritePromise = this.currentFile.streamWritePromise
+        .then(() => this.currentFile.writableStream.write(arrayBuffer))
+        .catch(err => console.error('[FileReceiver] Error writing direct stream chunk:', err));
     } else {
       // Memory Fallback: Accumulate chunks for Blob creation
       this.currentFile.chunks.push(arrayBuffer);
     }
 
     const totalBytes = this.currentFile.size;
-    const percent = totalBytes > 0 
-      ? Math.min(100, Math.round((this.currentFile.receivedBytes / totalBytes) * 100))
-      : 100;
+    const now = performance.now();
 
-    const stats = this.speedTracker.update(this.currentFile.receivedBytes, totalBytes);
+    // High-performance throttling: Update UI progress at ~20 FPS (every 50ms) or at 100% completion
+    // Eliminates hundreds of unnecessary DOM repaints per second, dramatically increasing throughput
+    if (!this.lastProgressEmit || now - this.lastProgressEmit >= 50 || this.currentFile.receivedBytes >= totalBytes) {
+      this.lastProgressEmit = now;
+      const percent = totalBytes > 0 
+        ? Math.min(100, Math.round((this.currentFile.receivedBytes / totalBytes) * 100))
+        : 100;
+      const stats = this.speedTracker.update(this.currentFile.receivedBytes, totalBytes);
 
-    this.emit('progress', {
-      id: this.currentFile.id,
-      bytesReceived: this.currentFile.receivedBytes,
-      totalBytes,
-      percent,
-      speedFormatted: stats.speedFormatted,
-      etaFormatted: stats.etaFormatted,
-      isDirectStream: this.currentFile.isDirectStream,
-      isPaused: this.isPaused
-    });
+      this.emit('progress', {
+        id: this.currentFile.id,
+        bytesReceived: this.currentFile.receivedBytes,
+        totalBytes,
+        percent,
+        speedFormatted: stats.speedFormatted,
+        etaFormatted: stats.etaFormatted,
+        isDirectStream: this.currentFile.isDirectStream,
+        isPaused: this.isPaused
+      });
+    }
   }
 
   async handleEnd(endMsg) {
@@ -123,8 +130,11 @@ export class FileReceiver {
       let calculatedSha256 = null;
 
       if (this.currentFile.isDirectStream && this.currentFile.writableStream) {
-        // Direct stream completed: close the disk writable stream
+        // Direct stream completed: wait for all queued chunk writes then close stream
         try {
+          if (this.currentFile.streamWritePromise) {
+            await this.currentFile.streamWritePromise;
+          }
           await this.currentFile.writableStream.close();
           console.log('[FileReceiver] Direct-to-Disk stream closed successfully');
         } catch (err) {
@@ -262,5 +272,6 @@ export class FileReceiver {
     this.currentFile = null;
     this.directStreamWritable = null;
     this.isPaused = false;
+    this.lastProgressEmit = 0;
   }
 }

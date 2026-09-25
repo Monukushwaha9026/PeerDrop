@@ -383,11 +383,25 @@ class App {
       this.ui.showFileDropZone();
     });
 
-    // Pause/Resume Sender button
+    // Pause/Resume Sender button with instant UI response
     this.ui.btnPauseSender?.addEventListener('click', () => {
       if (this.fileSender.isPaused) {
+        if (this.ui.btnPauseSender) {
+          this.ui.btnPauseSender.textContent = 'Pause';
+          this.ui.btnPauseSender.classList.remove('paused');
+        }
+        if (this.ui.senderBadge) {
+          this.ui.senderBadge.textContent = 'Sending';
+        }
         this.fileSender.resume();
       } else {
+        if (this.ui.btnPauseSender) {
+          this.ui.btnPauseSender.textContent = 'Resume';
+          this.ui.btnPauseSender.classList.add('paused');
+        }
+        if (this.ui.senderBadge) {
+          this.ui.senderBadge.textContent = 'Paused';
+        }
         this.fileSender.pause();
       }
     });
@@ -400,11 +414,25 @@ class App {
       this.ui.showFileDropZone();
     });
 
-    // Pause/Resume Receiver button
+    // Pause/Resume Receiver button with instant UI response
     this.ui.btnPauseReceiver?.addEventListener('click', () => {
       if (this.fileReceiver.isPaused) {
+        if (this.ui.btnPauseReceiver) {
+          this.ui.btnPauseReceiver.textContent = 'Pause';
+          this.ui.btnPauseReceiver.classList.remove('paused');
+        }
+        if (this.ui.receiverBadge) {
+          this.ui.receiverBadge.textContent = 'Receiving';
+        }
         this.fileReceiver.resume(this.webrtc.dataChannel);
       } else {
+        if (this.ui.btnPauseReceiver) {
+          this.ui.btnPauseReceiver.textContent = 'Resume';
+          this.ui.btnPauseReceiver.classList.add('paused');
+        }
+        if (this.ui.receiverBadge) {
+          this.ui.receiverBadge.textContent = 'Paused';
+        }
         this.fileReceiver.pause(this.webrtc.dataChannel);
       }
     });

@@ -1,4 +1,4 @@
-// public/js/fileSender.js - Adaptive Dynamic Chunking, Backpressure, Streaming Checksums & Pause/Resume
+// public/js/fileSender.js - Speed-Driven Adaptive Chunking, Non-Blocking Backpressure & Bulletproof Pause/Resume
 import { SpeedTracker, crc32Update, formatChecksum, computeSha256, formatChunkTier } from './utils.js';
 
 export class FileSender {
@@ -12,6 +12,7 @@ export class FileSender {
     this.dataChannel = null;
     this.listeners = new Map();
     this.isPaused = false;
+    this.pausePromise = null;
     this.pauseResolver = null;
   }
 
@@ -50,6 +51,7 @@ export class FileSender {
     this.dataChannel = dataChannel;
     this.speedTracker.reset();
     this.isPaused = false;
+    this.pausePromise = null;
     this.pauseResolver = null;
     this.chunkSize = this.minChunkSize; // Start at 64 KB safe baseline
 
@@ -62,7 +64,7 @@ export class FileSender {
       startTime: Date.now()
     };
 
-    console.log(`[FileSender] Starting adaptive transfer: ${file.name} (${file.size} bytes)`);
+    console.log(`[FileSender] Starting speed-adaptive transfer: ${file.name} (${file.size} bytes)`);
 
     // 1. Send File Metadata (Control Message)
     const metadata = {
@@ -76,11 +78,11 @@ export class FileSender {
     dataChannel.send(JSON.stringify(metadata));
     this.emit('start', metadata);
 
-    // 2. Stream File Chunks with Adaptive Chunk Sizing & Dynamic Backpressure
+    // 2. Stream File Chunks with Dynamic Backpressure & Continuous Speed Adaptation
     let offset = this.currentTransfer.offset;
     const totalBytes = file.size;
     let runningCrc = 0;
-    let fastDrainStreak = 0;
+    let chunkCount = 0;
 
     const getWatermarks = (size) => {
       return {
@@ -114,36 +116,22 @@ export class FileSender {
         return;
       }
 
-      // Check if paused
+      // Check if paused - immediately await pausePromise
       if (this.isPaused) {
-        await new Promise((resolve) => {
-          this.pauseResolver = resolve;
-        });
+        if (!this.pausePromise) {
+          this.pausePromise = new Promise((resolve) => {
+            this.pauseResolver = resolve;
+          });
+        }
+        await this.pausePromise;
         if (this.currentTransfer.cancelled) return;
       }
 
       // Dynamic Backpressure Control
       if (dataChannel.bufferedAmount > bufferHigh) {
-        const drainDurationMs = await waitForBufferDrain();
-
-        // Adaptive Chunk Sizing Adjustment
-        if (drainDurationMs < 35) {
-          fastDrainStreak++;
-          if (fastDrainStreak >= 2) {
-            if (this.chunkSize === this.minChunkSize) {
-              this.chunkSize = this.midChunkSize; // 64 KB -> 128 KB
-            } else if (this.chunkSize === this.midChunkSize) {
-              this.chunkSize = this.maxChunkSize; // 128 KB -> 256 KB
-            }
-            const updated = getWatermarks(this.chunkSize);
-            bufferHigh = updated.high;
-            bufferLow = updated.low;
-            dataChannel.bufferedAmountLowThreshold = bufferLow;
-            fastDrainStreak = 0;
-          }
-        } else if (drainDurationMs > 90) {
-          // Congestion detected: throttle down chunk size
-          fastDrainStreak = 0;
+        const drainMs = await waitForBufferDrain();
+        // If buffer drain takes too long, throttle down chunk size
+        if (drainMs > 90) {
           if (this.chunkSize === this.maxChunkSize) {
             this.chunkSize = this.midChunkSize; // 256 KB -> 128 KB
           } else if (this.chunkSize === this.midChunkSize) {
@@ -153,6 +141,29 @@ export class FileSender {
           bufferHigh = updated.high;
           bufferLow = updated.low;
           dataChannel.bufferedAmountLowThreshold = bufferLow;
+        }
+      }
+
+      // Continuous On-Time Speed-Driven Chunk Adaptation
+      // Checks smoothed throughput and adapts chunk tier immediately
+      const currentSpeed = this.speedTracker.smoothedSpeed;
+      if (offset >= 128 * 1024) {
+        if (currentSpeed >= 5 * 1024 * 1024) { // >= 5 MB/s -> 256 KB Ultra
+          if (this.chunkSize !== this.maxChunkSize) {
+            this.chunkSize = this.maxChunkSize;
+            const updated = getWatermarks(this.chunkSize);
+            bufferHigh = updated.high;
+            bufferLow = updated.low;
+            dataChannel.bufferedAmountLowThreshold = bufferLow;
+          }
+        } else if (currentSpeed >= 1.8 * 1024 * 1024) { // 1.8 - 5 MB/s -> 128 KB Turbo
+          if (this.chunkSize !== this.midChunkSize && this.chunkSize !== this.maxChunkSize) {
+            this.chunkSize = this.midChunkSize;
+            const updated = getWatermarks(this.chunkSize);
+            bufferHigh = updated.high;
+            bufferLow = updated.low;
+            dataChannel.bufferedAmountLowThreshold = bufferLow;
+          }
         }
       }
 
@@ -173,6 +184,7 @@ export class FileSender {
 
       offset += arrayBuffer.byteLength;
       this.currentTransfer.offset = offset;
+      chunkCount++;
 
       const percent = totalBytes > 0 ? Math.min(100, Math.round((offset / totalBytes) * 100)) : 100;
       const stats = this.speedTracker.update(offset, totalBytes);
@@ -190,8 +202,8 @@ export class FileSender {
         isPaused: this.isPaused
       });
 
-      // Brief microtask yield to keep browser event loop smooth
-      if (offset % (this.chunkSize * 6) === 0) {
+      // Regular microtask yield every 3 chunks to ensure UI clicks (Pause/Cancel) are handled immediately
+      if (chunkCount % 3 === 0) {
         await new Promise(r => setTimeout(r, 0));
       }
     }
@@ -233,6 +245,11 @@ export class FileSender {
   pause() {
     if (this.currentTransfer && !this.isPaused) {
       this.isPaused = true;
+      if (!this.pausePromise) {
+        this.pausePromise = new Promise((resolve) => {
+          this.pauseResolver = resolve;
+        });
+      }
       if (this.dataChannel && this.dataChannel.readyState === 'open') {
         try {
           this.dataChannel.send(JSON.stringify({
@@ -249,8 +266,10 @@ export class FileSender {
     if (this.currentTransfer && this.isPaused) {
       this.isPaused = false;
       if (this.pauseResolver) {
-        this.pauseResolver();
+        const resolve = this.pauseResolver;
         this.pauseResolver = null;
+        this.pausePromise = null;
+        resolve();
       }
       if (this.dataChannel && this.dataChannel.readyState === 'open') {
         try {
@@ -267,6 +286,11 @@ export class FileSender {
   handleRemotePause() {
     if (this.currentTransfer && !this.isPaused) {
       this.isPaused = true;
+      if (!this.pausePromise) {
+        this.pausePromise = new Promise((resolve) => {
+          this.pauseResolver = resolve;
+        });
+      }
       this.emit('pause', { id: this.currentTransfer.id, remote: true });
     }
   }
@@ -275,8 +299,10 @@ export class FileSender {
     if (this.currentTransfer && this.isPaused) {
       this.isPaused = false;
       if (this.pauseResolver) {
-        this.pauseResolver();
+        const resolve = this.pauseResolver;
         this.pauseResolver = null;
+        this.pausePromise = null;
+        resolve();
       }
       this.emit('resume', { id: this.currentTransfer.id, remote: true });
     }
@@ -293,8 +319,10 @@ export class FileSender {
     if (this.currentTransfer && !this.currentTransfer.cancelled) {
       this.currentTransfer.cancelled = true;
       if (this.pauseResolver) {
-        this.pauseResolver();
+        const resolve = this.pauseResolver;
         this.pauseResolver = null;
+        this.pausePromise = null;
+        resolve();
       }
       if (this.dataChannel && this.dataChannel.readyState === 'open') {
         try {
@@ -314,8 +342,10 @@ export class FileSender {
     if (this.currentTransfer) {
       this.currentTransfer.cancelled = true;
       if (this.pauseResolver) {
-        this.pauseResolver();
+        const resolve = this.pauseResolver;
         this.pauseResolver = null;
+        this.pausePromise = null;
+        resolve();
       }
       const id = this.currentTransfer.id;
       this.currentTransfer = null;
